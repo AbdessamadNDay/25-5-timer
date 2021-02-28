@@ -1,14 +1,7 @@
 
 import React from 'react';
 import './App.css';
-// class BreakTimer extends React.Component{
-//   constructor(props){
-//     super(props);
-//   }
-//   render(){
-//     return null;
-//   }
-// }
+
 class Timer extends React.Component{
   constructor(props){
     super(props);
@@ -31,11 +24,12 @@ class Clock525 extends React.Component{
   constructor(props){
     super(props);
     this.state={
-      breakLength: 5,
+      breakLength: 25,
       sessionLength: 25,
       m:25,
       s: 0,
       start: false,
+      b:false,
     }
     this.handleResetClick = this.handleResetClick.bind(this);
     this.handleIncreDecre = this.handleIncreDecre.bind(this);
@@ -49,19 +43,19 @@ class Clock525 extends React.Component{
         this.setState( prevState => ({breakLength: ((prevState.breakLength-1) <= 0 || this.state.start)  ? prevState.breakLength : prevState.breakLength-1}));
         break;
       case "binc":
-        this.setState( prevState => ({breakLength: this.state.start ? prevState.breakLength : prevState.breakLength+1}));
+        this.setState( prevState => ({breakLength: (prevState.breakLength >= 60 || this.state.start) ? prevState.breakLength : prevState.breakLength+1}));
         break;
       case "sdec":
         this.setState( prevState => ({
-          sessionLength: this.state.start ? prevState.sessionLength : prevState.sessionLength-1,
-          m: this.state.start ? prevState.m : prevState.sessionLength-1 ,
+          sessionLength: (this.state.start || prevState.sessionLength <=1)? prevState.sessionLength : prevState.sessionLength-1,
+          m: (this.state.start || prevState.m <=1) ? prevState.m : prevState.sessionLength-1 ,
           s: this.state.start ? prevState.s : 0,
         }));
         break;
       case "sinc":
         this.setState( prevState => ({
           sessionLength: ((prevState.sessionLength+1) > 60 || this.state.start) ? prevState.sessionLength : prevState.sessionLength+1,
-          m: this.state.start ? prevState.m : prevState.sessionLength+1 ,
+          m: ((prevState.sessionLength+1) > 60 || this.state.start) ? prevState.m : prevState.sessionLength+1 ,
           s: this.state.start ? prevState.s : 0,
         }));
         
@@ -76,13 +70,28 @@ class Clock525 extends React.Component{
       sessionLength: 25,
       m:25,
       s:0,
+      start:false,
+      b:false,
     });
-    this.handleStartStopClick();
+    document.getElementById('beep').load();
   }
   componentDidUpdate(){
-      console.log(this.state.start);
-      console.log(this.state.sessionLength);
-
+      if(this.state.m ===0 && this.state.s===0 && this.state.b===false){
+        this.setState((prevState) => ({
+          m: prevState.breakLength,
+          s: 0,
+          b: !prevState.b,
+        }));
+        document.getElementById('beep').play();
+      }else if(this.state.m ===0 && this.state.s===0 && this.state.b===true){
+        this.setState((prevState) => ({
+          m: prevState.sessionLength,
+          s: 0,
+          b: !prevState.b,
+        }));
+        document.getElementById('beep').play();
+      }
+      console.log(this.state);
   }
   handleStartStopClick(){
     this.setState(prevState => ({start: !prevState.start}));
@@ -103,8 +112,9 @@ class Clock525 extends React.Component{
         <button id="session-decrement" style={sty} onClick={this.handleIncreDecre} value="sdec">&#8595;</button>
         <h1 id="session-label" style={sty}>Session Length:</h1><h1 id="session-length" style={sty}>{this.state.sessionLength}</h1>
         <button id="session-increment" style={sty} onClick={this.handleIncreDecre} value="sinc">&#8593;</button>
-        <h3 id="timer-label">Session:</h3>
-        {this.state.start && <Timer start={this.startTimer}/>}
+        <h3 id="timer-label">{this.state.b? 'break:': 'Session:'}</h3>
+        {(this.state.start ) && <Timer start={this.startTimer}/>}
+        <audio src="./audio/alarm_clock.mp3" id="beep" ></audio>
         <h3 id="time-left">{(this.state.m.toString().length === 1)? '0'+this.state.m : this.state.m} : {(this.state.s.toString().length ===1)? '0'+this.state.s :this.state.s}</h3>
         <button id="start_stop" onClick={this.handleStartStopClick}>start or stop</button>
         <button id="reset" onClick={this.handleResetClick}>reset</button>
